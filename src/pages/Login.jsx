@@ -21,10 +21,9 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 26 }}>
-          <div className="brand-icon" style={{ width: 44, height: 44, borderRadius: 12 }}>{Icons.flask}</div>
           <div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--sky-900)' }}>SimLab Inventory</div>
-            <div style={{ fontSize: 12, color: 'var(--sl-400)' }}>Simulation Lab Management System</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--sky-900)' }}>MC Nursing Simulation Lab</div>
+            <div style={{ fontSize: 12, color: 'var(--sl-400)' }}>Inventory Management System</div>
           </div>
         </div>
         <form onSubmit={submit}>
