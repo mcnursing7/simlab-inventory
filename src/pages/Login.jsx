@@ -1,4 +1,4 @@
-```jsx
+
 import React, { useState } from 'react'
 import { signIn, getCurrentProfile } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -107,4 +107,3 @@ export default function Login() {
     </div>
   )
 }
-```
