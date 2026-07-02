@@ -18,14 +18,14 @@ export default function Login() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 26 }}>
-          <div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--sky-900)' }}>MC Nursing Simulation Lab</div>
-            <div style={{ fontSize: 12, color: 'var(--sl-400)' }}>Inventory Management System</div>
-          </div>
-        </div>
+    <div style={{ marginBottom: 26, textAlign: 'center' }}>
+  <div style={{ fontSize: 19, fontWeight: 700, color: 'var(--sky-900)' }}>
+    MC Nursing Simulation Lab
+  </div>
+  <div style={{ fontSize: 12, color: 'var(--sl-400)' }}>
+    Inventory Management System
+  </div>
+</div>
         <form onSubmit={submit}>
           <div className="ff"><label className="fl">Email Address</label>
             <input className="fi" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@simlab.edu" required autoFocus />
