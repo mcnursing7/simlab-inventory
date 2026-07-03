@@ -5,6 +5,7 @@ import { signOut } from './lib/supabase'
 import { Icons, Spinner, initials, ROLES, ROLE_CLS } from './components/UI'
 import MyAccountModal from './components/MyAccountModal'
 import { Toaster } from 'react-hot-toast'
+import logo from './assets/logo'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MasterList from './pages/MasterList'
@@ -51,14 +52,15 @@ function Shell() {
   const logout   = async () => { await signOut(); setUser(null) }
 
   if (data.error) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 20 }}>
-      <div style={{ maxWidth: 420, width: '100%' }}>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh', padding:20 }}>
+      <div style={{ maxWidth:420, width:'100%' }}>
         <div className="alert alert-danger">{Icons.alert}
           <div>
             <strong>Connection Error</strong>
-            <div style={{ marginTop: 4, fontSize: 13 }}>{data.error}</div>
-            <div style={{ marginTop: 8, fontSize: 12 }}>Check your Supabase URL and key in .env, then make sure the schema has been applied.</div>
-            <button className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={data.reload}>{Icons.refresh} Retry</button>
+            <div style={{ marginTop:4, fontSize:13 }}>{data.error}</div>
+            <button className="btn btn-secondary btn-sm" style={{ marginTop:10 }} onClick={data.reload}>
+              {Icons.refresh} Retry
+            </button>
           </div>
         </div>
       </div>
@@ -72,16 +74,17 @@ function Shell() {
       <div className={`overlay${sideOpen ? ' show' : ''}`} onClick={() => setSideOpen(false)} />
 
       <aside className={`sidebar${sideOpen ? ' open' : ''}`}>
-        {/* Brand */}
-        <div className="sidebar-brand">
-          
-          <div>
-            <div className="brand-name">MC SimLab</div>
-            <div className="brand-sub">Inventory System</div>
+
+        {/* ── Brand ───────────────────────────────────── */}
+        <div className="sidebar-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6, padding: '16px 18px 14px' }}>
+          <img src={logo} alt="Streakk" style={{ height: 26, objectFit: 'contain' }} />
+          <div style={{ height: 1, background: 'var(--sky-100)', width: '100%' }} />
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--sky-600)' }}>
+            Inventory Management
           </div>
         </div>
 
-        {/* Nav — text only, no icons */}
+        {/* ── Nav ─────────────────────────────────────── */}
         <nav className="sidebar-nav">
           {groups.map(g => (
             <div key={g}>
@@ -100,14 +103,14 @@ function Shell() {
           ))}
         </nav>
 
-        {/* User footer — My Account button available to EVERY role */}
+        {/* ── Footer ──────────────────────────────────── */}
         <div className="sidebar-footer">
           <div className="user-row">
             <div className="avatar">{initials(user.name)}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex:1, minWidth:0 }}>
               <div className="user-name">{user.name}</div>
-              <div style={{ marginTop: 2 }}>
-                <span className={`badge ${ROLE_CLS[user.role] || 'badge-slate'}`} style={{ fontSize: 10 }}>
+              <div style={{ marginTop:2 }}>
+                <span className={`badge ${ROLE_CLS[user.role] || 'badge-slate'}`} style={{ fontSize:10 }}>
                   {ROLES[user.role] || user.role}
                 </span>
               </div>
@@ -116,7 +119,7 @@ function Shell() {
           </div>
           <button
             className="btn btn-secondary"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 8, fontSize: 12, padding: '7px' }}
+            style={{ width:'100%', justifyContent:'center', marginTop:8, fontSize:12, padding:'7px' }}
             onClick={() => setMyAccount(true)}>
             My Account
           </button>
@@ -124,35 +127,33 @@ function Shell() {
       </aside>
 
       <main className="main-area">
-        {/* Topbar */}
+        {/* ── Topbar ──────────────────────────────────── */}
         <div className="topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button className="mobile-menu-btn" onClick={() => setSideOpen(true)}>{Icons.menu}</button>
             <div className="topbar-title">{pageTitle}</div>
           </div>
           <div className="topbar-right">
             {!data.loading && lowCount > 0 && (
-              <div className="alert alert-warning" style={{ margin: 0, padding: '5px 11px', fontSize: 12 }}>
+              <div className="alert alert-warning" style={{ margin:0, padding:'5px 11px', fontSize:12 }}>
                 {Icons.alert}<span>{lowCount} low stock</span>
               </div>
             )}
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--sky-50)', border: '1px solid var(--sky-100)', borderRadius: 8, padding: '5px 11px', cursor: 'pointer' }}
-              onClick={() => setMyAccount(true)}
-              title="My Account">
-              <div className="avatar" style={{ width: 26, height: 26, fontSize: 11 }}>{initials(user.name)}</div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--sky-900)' }} className="hide-mobile">{user.name}</span>
-              <span className={`badge ${ROLE_CLS[user.role] || 'badge-slate'}`} style={{ fontSize: 10 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--sky-50)', border:'1px solid var(--sky-100)', borderRadius:8, padding:'5px 11px', cursor:'pointer' }}
+              onClick={() => setMyAccount(true)} title="My Account">
+              <div className="avatar" style={{ width:26, height:26, fontSize:11 }}>{initials(user.name)}</div>
+              <span style={{ fontSize:12, fontWeight:600, color:'var(--sky-900)' }} className="hide-mobile">{user.name}</span>
+              <span className={`badge ${ROLE_CLS[user.role] || 'badge-slate'}`} style={{ fontSize:10 }}>
                 {ROLES[user.role] || user.role}
               </span>
             </div>
-            <button className="btn btn-ghost btn-icon" onClick={data.reload} title="Refresh data" disabled={data.loading}>
+            <button className="btn btn-ghost btn-icon" onClick={data.reload} title="Refresh" disabled={data.loading}>
               {data.loading ? <div className="spin" /> : Icons.refresh}
             </button>
           </div>
         </div>
 
-        {/* Page content */}
+        {/* ── Page content ────────────────────────────── */}
         <div className="page-content">
           {data.loading ? <Spinner /> : <>
             {page === 'dashboard'   && <Dashboard setPage={navigate} />}
@@ -180,7 +181,7 @@ export default function App() {
     <AuthProvider>
       <DataProvider>
         <Shell />
-        <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'var(--font)', fontSize: 13 } }} />
+        <Toaster position="top-right" toastOptions={{ style:{ fontFamily:'var(--font)', fontSize:13 } }} />
       </DataProvider>
     </AuthProvider>
   )
