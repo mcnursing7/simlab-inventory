@@ -4,8 +4,8 @@ import { DataProvider, useData, getLowItems } from './hooks/useData'
 import { signOut } from './lib/supabase'
 import { Icons, Spinner, initials, ROLES, ROLE_CLS } from './components/UI'
 import MyAccountModal from './components/MyAccountModal'
+import BrandMark from './components/BrandMark'
 import { Toaster } from 'react-hot-toast'
-import logo from './assets/logo'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MasterList from './pages/MasterList'
@@ -75,16 +75,12 @@ function Shell() {
 
       <aside className={`sidebar${sideOpen ? ' open' : ''}`}>
 
-        {/* ── Brand ───────────────────────────────────── */}
-        <div className="sidebar-brand" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6, padding: '16px 18px 14px' }}>
-          <img src={logo} alt="Streakk" style={{ height: 26, objectFit: 'contain' }} />
-          <div style={{ height: 1, background: 'var(--sky-100)', width: '100%' }} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--sky-600)' }}>
-            Inventory Management
-          </div>
+        {/* ── Brand ─────────────────────────── */}
+        <div className="sidebar-brand" style={{ padding: '14px 18px 12px' }}>
+          <BrandMark size="sm" subtitle={true} />
         </div>
 
-        {/* ── Nav ─────────────────────────────────────── */}
+        {/* ── Nav ───────────────────────────── */}
         <nav className="sidebar-nav">
           {groups.map(g => (
             <div key={g}>
@@ -103,7 +99,7 @@ function Shell() {
           ))}
         </nav>
 
-        {/* ── Footer ──────────────────────────────────── */}
+        {/* ── Footer ────────────────────────── */}
         <div className="sidebar-footer">
           <div className="user-row">
             <div className="avatar">{initials(user.name)}</div>
@@ -127,7 +123,7 @@ function Shell() {
       </aside>
 
       <main className="main-area">
-        {/* ── Topbar ──────────────────────────────────── */}
+        {/* ── Topbar ────────────────────────── */}
         <div className="topbar">
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button className="mobile-menu-btn" onClick={() => setSideOpen(true)}>{Icons.menu}</button>
@@ -153,7 +149,7 @@ function Shell() {
           </div>
         </div>
 
-        {/* ── Page content ────────────────────────────── */}
+        {/* ── Page content ──────────────────── */}
         <div className="page-content">
           {data.loading ? <Spinner /> : <>
             {page === 'dashboard'   && <Dashboard setPage={navigate} />}

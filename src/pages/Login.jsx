@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { signIn, getCurrentProfile } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Icons } from '../components/UI'
-import logo from '../assets/logo'
+import BrandMark from '../components/BrandMark'
 
 export default function Login() {
   const { setUser } = useAuth()
@@ -22,21 +22,9 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
 
-        {/* Logo + brand block */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <img
-            src={logo}
-            alt="Streakk"
-            style={{ height: 42, objectFit: 'contain', display: 'block', margin: '0 auto 12px' }}
-          />
-          {/* Divider line */}
-          <div style={{ height: 1, background: 'var(--sl-100)', margin: '0 auto 12px', width: 60 }} />
-          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--sky-700)' }}>
-            Inventory Management
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--sl-400)', marginTop: 3 }}>
-            Simulation Lab System
-          </div>
+        {/* Brand — centred, large */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+          <BrandMark size="lg" subtitle={true} />
         </div>
 
         <form onSubmit={submit}>

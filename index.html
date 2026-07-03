@@ -4,19 +4,23 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 
-  <title>Streakk Inventory</title>
+  <title>Streakk Inventory Management</title>
 
-  <!-- Mobile "Add to Home Screen" appearance -->
-  <meta name="application-name" content="Streakk Inventory"/>
-  <meta name="apple-mobile-web-app-title" content="Streakk"/>
+  <!-- Progressive Web App manifest -->
+  <link rel="manifest" href="/manifest.json"/>
+  <!-- iOS Safari (ignores manifest, needs these separately) -->
   <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="Streakk"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <link rel="apple-touch-icon" href="/icon.png"/>
+
+  <!-- Android / general -->
   <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="application-name" content="Streakk"/>
   <meta name="theme-color" content="#0284c7"/>
 
-  <!-- Use the Streakk logo as the favicon (referenced from public/ folder) -->
-  <link rel="icon" type="image/png" href="/streakk-logo.png"/>
-  <link rel="apple-touch-icon" href="/streakk-logo.png"/>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/icon.png"/>
 
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 </head>
