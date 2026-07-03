@@ -2,6 +2,7 @@ import React,{useState,useMemo} from 'react'
 import {useData} from '../hooks/useData'
 import {createPO,cancelPO} from '../lib/db'
 import {Icons,Modal,Confirm,Field,Inp,Sel,fmt$,fmtDate,uid,PO_STATUS_CLS} from '../components/UI'
+import ScanButton from '../components/ScanButton'
 import toast from 'react-hot-toast'
 
 export default function PurchaseOrders({user}){
@@ -24,6 +25,18 @@ export default function PurchaseOrders({user}){
     e.preventDefault();setSaving(true)
     try{await createPO({...form,createdBy:user.id},form.lines);await reload();setCreating(false);toast.success('PO created')}
     catch(e){toast.error(e.message)}finally{setSaving(false)}
+  }
+
+  const handleLineScan=(lineId,code)=>{
+    const value=code.trim().toLowerCase()
+    const match=items.find(i=>i.sku.toLowerCase()===value||String(i.id).toLowerCase()===value)
+    if(match){
+      updLine(lineId,'itemId',match.id)
+      updLine(lineId,'unitPrice',match.price+'')
+      toast.success(`Selected ${match.name}`)
+    }else{
+      toast.error(`No item found for "${code.trim()}"`)
+    }
   }
 
   const filtered=useMemo(()=>pos.filter(p=>!stF||p.status===stF),[pos,stF])
@@ -111,7 +124,14 @@ export default function PurchaseOrders({user}){
             </div>
             {form.lines.map((line,idx)=>(
               <div key={line.id} className="pol">
-                <Field label={idx===0?'Item *':''}><Sel value={line.itemId} onChange={e=>{const it=items.find(i=>i.id===e.target.value);updLine(line.id,'itemId',e.target.value);if(it)updLine(line.id,'unitPrice',it.price+'')}} required><option value="">Select…</option>{items.map(i=><option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Sel></Field>
+                <Field label={idx===0?'Item *':''}>
+                  <div style={{display:'flex',gap:6}}>
+                    <div style={{flex:1}}>
+                      <Sel value={line.itemId} onChange={e=>{const it=items.find(i=>i.id===e.target.value);updLine(line.id,'itemId',e.target.value);if(it)updLine(line.id,'unitPrice',it.price+'')}} required><option value="">Select…</option>{items.map(i=><option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Sel>
+                    </div>
+                    <ScanButton onScan={code=>handleLineScan(line.id,code)}/>
+                  </div>
+                </Field>
                 <Field label={idx===0?'Qty *':''}><Inp type="number" min="1" value={line.qty} onChange={e=>updLine(line.id,'qty',e.target.value)} required/></Field>
                 <div className="pol-price"><Field label={idx===0?'Unit Price ($)':''} ><Inp type="number" step="0.01" min="0" value={line.unitPrice} onChange={e=>updLine(line.id,'unitPrice',e.target.value)} required/></Field></div>
                 <div className="pol-sub"><Field label={idx===0?'Subtotal':''}><div style={{padding:'8px 0',fontWeight:700,color:'var(--sky-800)'}}>{fmt$((+line.qty||0)*(+line.unitPrice||0))}</div></Field></div>

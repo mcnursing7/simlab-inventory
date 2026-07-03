@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useData, totalOnHand } from '../hooks/useData'
 import { Icons, Modal, fmt$, fmtDate } from '../components/UI'
+import ScanButton from '../components/ScanButton'
 
 function DetailModal({ item, data, onClose }) {
   const [tab, setTab] = useState('locations')
@@ -126,6 +127,7 @@ export default function OnHand() {
   const { items, inventory } = data
   const [search, setSearch] = useState('')
   const [detail, setDetail] = useState(null)
+  const [scanMsg, setScanMsg] = useState(null)
 
   const filtered = useMemo(() =>
     items.filter(i =>
@@ -134,15 +136,37 @@ export default function OnHand() {
       i.sku.toLowerCase().includes(search.toLowerCase())
     ), [items, search])
 
+  const handleScan = (code) => {
+    const value = code.trim().toLowerCase()
+    const match = items.find(i =>
+      i.sku.toLowerCase() === value || String(i.id).toLowerCase() === value
+    )
+    if (match) {
+      setScanMsg(null)
+      setDetail(match)
+    } else {
+      // No exact match — fall back to filtering the table with the scanned value
+      setSearch(code.trim())
+      setScanMsg(`No item found for "${code.trim()}" — showing closest matches.`)
+    }
+  }
+
   return (
     <div>
-      <div style={{ marginBottom: 14 }}>
-        <div className="search-wrap">
+      <div style={{ marginBottom: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="search-wrap" style={{ flex: 1 }}>
           {Icons.barcode}
           <input className="search-input" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search inventory…" style={{ paddingLeft: 32 }} />
         </div>
+        <ScanButton onScan={handleScan} />
       </div>
+
+      {scanMsg && (
+        <div className="alert alert-warning" style={{ marginBottom: 14 }}>
+          {Icons.alert}<span>{scanMsg}</span>
+        </div>
+      )}
 
       <div className="card">
         <div className="table-wrap">

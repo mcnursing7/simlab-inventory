@@ -3,6 +3,7 @@ import {useData} from '../hooks/useData'
 import {createTransfer} from '../lib/db'
 import {useAuth} from '../hooks/useAuth'
 import {Icons,Modal,Field,Inp,Sel,fmtDate} from '../components/UI'
+import ScanButton from '../components/ScanButton'
 import toast from 'react-hot-toast'
 
 export default function Transfers(){
@@ -21,6 +22,17 @@ export default function Transfers(){
       await createTransfer({itemId:form.itemId,fromLocationId:form.fromLocationId,toLocationId:form.toLocationId,qty:+form.qty,note:form.note,userId:user.id})
       await reload();setModal(false);setForm(EF);toast.success('Transfer recorded')
     }catch(e){toast.error(e.message)}finally{setSaving(false)}
+  }
+
+  const handleItemScan=code=>{
+    const value=code.trim().toLowerCase()
+    const match=items.find(i=>i.sku.toLowerCase()===value||String(i.id).toLowerCase()===value)
+    if(match){
+      setForm(p=>({...p,itemId:match.id}))
+      toast.success(`Selected ${match.name}`)
+    }else{
+      toast.error(`No item found for "${code.trim()}"`)
+    }
   }
 
   const avail=form.itemId&&form.fromLocationId?inventory.find(r=>r.item_id===form.itemId&&r.location_id===form.fromLocationId)?.qty||0:null
@@ -52,7 +64,14 @@ export default function Transfers(){
         <Modal title="Transfer Inventory Between Locations" onClose={()=>setModal(false)}
           footer={<><button className="btn btn-secondary" onClick={()=>setModal(false)}>Cancel</button><button className="btn btn-primary" onClick={()=>document.getElementById('tform').requestSubmit()} disabled={saving}>{saving?<div className="spin"/>:Icons.check}Transfer</button></>}>
           <form id="tform" onSubmit={save}>
-            <Field label="Item *"><Sel value={form.itemId} onChange={f('itemId')} required><option value="">Select item…</option>{items.map(i=><option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Sel></Field>
+            <Field label="Item *">
+              <div style={{display:'flex',gap:8}}>
+                <div style={{flex:1}}>
+                  <Sel value={form.itemId} onChange={f('itemId')} required><option value="">Select item…</option>{items.map(i=><option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}</Sel>
+                </div>
+                <ScanButton onScan={handleItemScan}/>
+              </div>
+            </Field>
             <div className="fr2">
               <Field label="From Location *"><Sel value={form.fromLocationId} onChange={f('fromLocationId')} required><option value="">Select…</option>{locations.filter(l=>l.active).map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</Sel></Field>
               <Field label="To Location *"><Sel value={form.toLocationId} onChange={f('toLocationId')} required><option value="">Select…</option>{locations.filter(l=>l.active).map(l=><option key={l.id} value={l.id}>{l.name}</option>)}</Sel></Field>
