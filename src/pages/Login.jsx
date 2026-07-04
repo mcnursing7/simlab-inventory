@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { signIn, getCurrentProfile } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { Icons } from '../components/UI'
-import BrandMark from '../components/BrandMark'
+import logo from '../assets/logo'
 
 export default function Login() {
   const { setUser } = useAuth()
@@ -22,9 +22,20 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
 
-        {/* Brand — centred, large */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-          <BrandMark size="lg" subtitle={true} />
+        {/* Full Streakk logo — already contains wordmark + streak + "Inventory Management" */}
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <img
+            src={logo}
+            alt="Streakk Inventory Management"
+            style={{
+              width: '100%',
+              maxWidth: 260,
+              height: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+              margin: '0 auto',
+            }}
+          />
         </div>
 
         <form onSubmit={submit}>

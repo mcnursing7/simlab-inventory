@@ -4,8 +4,8 @@ import { DataProvider, useData, getLowItems } from './hooks/useData'
 import { signOut } from './lib/supabase'
 import { Icons, Spinner, initials, ROLES, ROLE_CLS } from './components/UI'
 import MyAccountModal from './components/MyAccountModal'
-import BrandMark from './components/BrandMark'
 import { Toaster } from 'react-hot-toast'
+import logo from './assets/logo'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MasterList from './pages/MasterList'
@@ -75,9 +75,22 @@ function Shell() {
 
       <aside className={`sidebar${sideOpen ? ' open' : ''}`}>
 
-        {/* ── Brand ─────────────────────────── */}
-        <div className="sidebar-brand" style={{ padding: '14px 18px 12px' }}>
-          <BrandMark size="sm" subtitle={true} />
+        {/* ── Brand: full Streakk logo ───────── */}
+        <div style={{
+          padding: '14px 16px 12px',
+          borderBottom: '1px solid var(--sky-100)',
+        }}>
+          <img
+            src={logo}
+            alt="Streakk Inventory Management"
+            style={{
+              width: '100%',
+              maxWidth: 180,
+              height: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
         </div>
 
         {/* ── Nav ───────────────────────────── */}
@@ -123,7 +136,6 @@ function Shell() {
       </aside>
 
       <main className="main-area">
-        {/* ── Topbar ────────────────────────── */}
         <div className="topbar">
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button className="mobile-menu-btn" onClick={() => setSideOpen(true)}>{Icons.menu}</button>
@@ -149,7 +161,6 @@ function Shell() {
           </div>
         </div>
 
-        {/* ── Page content ──────────────────── */}
         <div className="page-content">
           {data.loading ? <Spinner /> : <>
             {page === 'dashboard'   && <Dashboard setPage={navigate} />}
