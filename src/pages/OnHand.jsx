@@ -3,6 +3,103 @@ import { useData, totalOnHand } from '../hooks/useData'
 import { Icons, Modal, fmt$, fmtDate } from '../components/UI'
 import ScanButton from '../components/ScanButton'
 
+// Group inventory rows by their TOP-LEVEL location, bucketing any
+// sublocation rows underneath their parent. Rows sitting directly at a
+// top-level location (no sublocation) are kept in the same bucket and
+// flagged so they can be labeled "General" when a group is expanded.
+function groupRowsByTopLevel(rows, locations) {
+  const map = new Map() // topLocationId -> { top, subs: [{ loc, row }] }
+  for (const row of rows) {
+    const loc = locations.find(l => l.id === row.location_id)
+    if (!loc) continue
+    const top = loc.parent_id ? (locations.find(l => l.id === loc.parent_id) || loc) : loc
+    if (!map.has(top.id)) map.set(top.id, { top, subs: [] })
+    map.get(top.id).subs.push({ loc, row })
+  }
+  return [...map.values()]
+}
+
+// Locations tab inside the item detail modal — top-level location as a
+// collapsible header, sublocation breakdown revealed underneath.
+function LocationsTab({ item, rows, locations }) {
+  const groups = useMemo(
+    () => groupRowsByTopLevel(rows.filter(r => r.qty > 0), locations),
+    [rows, locations]
+  )
+  const [collapsed, setCollapsed] = useState(new Set())
+  const toggle = id => setCollapsed(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  if (groups.length === 0) {
+    return <div className="empty">{Icons.boxes}<p>No stock at any location</p></div>
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {groups.map(g => {
+        const total = g.subs.reduce((s, x) => s + x.row.qty, 0)
+        const hasRealSubs = g.subs.some(x => x.loc.id !== g.top.id)
+        const isOpen = hasRealSubs && !collapsed.has(g.top.id)
+
+        return (
+          <div key={g.top.id} style={{ border: '1px solid var(--sky-100)', borderRadius: 8, overflow: 'hidden' }}>
+            <div
+              onClick={() => hasRealSubs && toggle(g.top.id)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '10px 13px', background: 'var(--sky-50)',
+                cursor: hasRealSubs ? 'pointer' : 'default',
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                {hasRealSubs && (
+                  <span style={{
+                    fontSize: 10, color: 'var(--sl-400)', display: 'inline-block',
+                    transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s',
+                  }}>▶</span>
+                )}
+                <span className="loc-chip">{Icons.location}{g.top.name}</span>
+                {g.top.is_main && <span className="badge badge-blue">Main</span>}
+                {hasRealSubs && (
+                  <span style={{ fontSize: 11, color: 'var(--sl-400)' }}>
+                    ({g.subs.length} sublocation{g.subs.length !== 1 ? 's' : ''})
+                  </span>
+                )}
+              </div>
+              <div>
+                <span style={{ fontWeight: 700 }}>{total} {item.unit}</span>
+                <span style={{ fontWeight: 400, color: 'var(--sl-400)', fontSize: 12, marginLeft: 6 }}>
+                  {fmt$(total * item.price)}
+                </span>
+              </div>
+            </div>
+
+            {isOpen && (
+              <table className="dt" style={{ margin: 0 }}>
+                <tbody>
+                  {g.subs.map(({ loc, row }) => (
+                    <tr key={row.id}>
+                      <td style={{ paddingLeft: 34 }}>
+                        {loc.id === g.top.id
+                          ? <span style={{ color: 'var(--sl-400)', fontStyle: 'italic' }}>General (no sublocation)</span>
+                          : <span className="loc-chip">{loc.name}</span>}
+                      </td>
+                      <td style={{ fontWeight: 700, textAlign: 'right' }}>{row.qty} {item.unit}</td>
+                      <td style={{ textAlign: 'right', width: 90 }}>{fmt$(row.qty * item.price)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function DetailModal({ item, data, onClose }) {
   const [tab, setTab] = useState('locations')
   const { inventory, transactions, pos, locations, vendors } = data
@@ -42,27 +139,7 @@ function DetailModal({ item, data, onClose }) {
 
       {/* Locations tab */}
       {tab === 'locations' && (
-        <table className="dt">
-          <thead><tr><th>Location</th><th>Qty On Hand</th><th>Value</th></tr></thead>
-          <tbody>
-            {rows.filter(r => r.qty > 0).map(r => {
-              const loc = locations.find(l => l.id === r.location_id)
-              return (
-                <tr key={r.id}>
-                  <td>
-                    <span className="loc-chip">{Icons.location}{loc?.name || '—'}</span>
-                    {loc?.is_main && <span className="badge badge-blue" style={{ marginLeft: 5 }}>Main</span>}
-                  </td>
-                  <td style={{ fontWeight: 700 }}>{r.qty} {item.unit}</td>
-                  <td>{fmt$(r.qty * item.price)}</td>
-                </tr>
-              )
-            })}
-            {rows.filter(r => r.qty > 0).length === 0 && (
-              <tr><td colSpan={3}><div className="empty">{Icons.boxes}<p>No stock at any location</p></div></td></tr>
-            )}
-          </tbody>
-        </table>
+        <LocationsTab item={item} rows={rows} locations={locations} />
       )}
 
       {/* Transactions tab */}
@@ -119,6 +196,57 @@ function DetailModal({ item, data, onClose }) {
         </table>
       )}
     </Modal>
+  )
+}
+
+// "Locations" column in the main On Hand table — one chip per top-level
+// location (aggregated), click-to-expand reveals the sublocation breakdown.
+function LocationChips({ item, data }) {
+  const { inventory, locations } = data
+  const rows = inventory.filter(r => r.item_id === item.id && r.qty > 0)
+  const groups = useMemo(() => groupRowsByTopLevel(rows, locations), [rows, locations])
+  const [expanded, setExpanded] = useState(new Set())
+  const toggle = id => setExpanded(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    return next
+  })
+
+  if (groups.length === 0) {
+    return <span style={{ color: 'var(--sl-300)', fontSize: 12 }}>No stock</span>
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {groups.map(g => {
+        const total = g.subs.reduce((s, x) => s + x.row.qty, 0)
+        const hasRealSubs = g.subs.some(x => x.loc.id !== g.top.id)
+        const isOpen = expanded.has(g.top.id)
+        return (
+          <div key={g.top.id}>
+            <span
+              className="loc-chip"
+              onClick={() => hasRealSubs && toggle(g.top.id)}
+              style={{ cursor: hasRealSubs ? 'pointer' : 'default' }}
+              title={hasRealSubs ? 'Click to see sublocations' : undefined}>
+              {g.top.name}: {total}
+              {hasRealSubs && (
+                <span style={{ marginLeft: 4, fontSize: 9, color: 'var(--sl-400)' }}>{isOpen ? '▲' : '▼'}</span>
+              )}
+            </span>
+            {isOpen && hasRealSubs && (
+              <div style={{ marginLeft: 10, marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {g.subs.map(({ loc, row }) => (
+                  <span key={row.id} className="loc-chip" style={{ fontSize: 11, opacity: .85 }}>
+                    {loc.id === g.top.id ? 'General' : loc.name}: {row.qty}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -193,13 +321,7 @@ export default function OnHand() {
                       <span style={{ fontSize: 11, color: 'var(--sl-400)', marginLeft: 4 }}>{item.unit}</span>
                     </td>
                     <td className="hide-mobile">
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {rows.map(r => {
-                          const loc = data.locations.find(l => l.id === r.location_id)
-                          return <span key={r.id} className="loc-chip">{loc?.name}: {r.qty}</span>
-                        })}
-                        {rows.length === 0 && <span style={{ color: 'var(--sl-300)', fontSize: 12 }}>No stock</span>}
-                      </div>
+                      <LocationChips item={item} data={data} />
                     </td>
                     <td>{fmt$(item.price)}</td>
                     <td style={{ fontWeight: 700 }}>{fmt$(total * item.price)}</td>
