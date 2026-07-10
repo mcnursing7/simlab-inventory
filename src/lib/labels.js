@@ -24,3 +24,18 @@ export const AVERY_TEMPLATES = {
 export const DEFAULT_TEMPLATE = '5163'
 export const PAGE_W_IN = 8.5
 export const PAGE_H_IN = 11
+
+// Single source of truth for label geometry, used by both the on-screen/
+// print view and the PDF export so they can never drift out of sync.
+// Sizes the QR code and barcode to the label's actual height instead of
+// using fixed inch values — fixed values overflow (and visually overlap)
+// on shorter templates like the 1"-tall Avery 5160.
+export function computeLabelLayout(template) {
+  const pad = 0.08
+  const barH = Math.min(0.4, template.labelH * 0.22)
+  const qrSize = Math.max(
+    Math.min(template.labelH - pad * 2 - barH - pad, template.labelW * 0.4, 0.9),
+    0.35
+  )
+  return { pad, qrSize, barH }
+}

@@ -4,47 +4,50 @@ import QRCode from 'qrcode'
 import jsPDF from 'jspdf'
 import toast from 'react-hot-toast'
 import { Icons, Modal, fmt$ } from './UI'
-import { AVERY_TEMPLATES, DEFAULT_TEMPLATE } from '../lib/labels'
+import { AVERY_TEMPLATES, DEFAULT_TEMPLATE, computeLabelLayout } from '../lib/labels'
 
 // ── One label's visual design (used both on-screen and for print) ──
 // Barcode and QR both encode the item's SKU (not JSON) so either one
 // scans cleanly with the same handleScan() logic used elsewhere in
 // the app — OnHand's scanner does a plain string match on item.sku.
+// QR/barcode sizes come from computeLabelLayout() so they always fit
+// within the chosen template's height, however short it is.
 function LabelCell({ item, template }) {
   const barRef = useRef()
   const qrRef  = useRef()
+  const { pad, qrSize, barH } = computeLabelLayout(template)
 
   useEffect(() => {
     if (qrRef.current) {
       QRCode.toCanvas(qrRef.current, item.sku, {
-        width: 160, margin: 0, color: { dark: '#000', light: '#ffffff' },
+        width: Math.round(qrSize * 200), margin: 0, color: { dark: '#000', light: '#ffffff' },
       }).catch(() => {})
     }
     if (barRef.current) {
       try {
         JsBarcode(barRef.current, item.sku, {
           format: 'CODE128', displayValue: false,
-          height: 40, margin: 0, background: '#fff', lineColor: '#000',
+          height: Math.round(barH * 100), margin: 0, background: '#fff', lineColor: '#000',
         })
       } catch (e) {
         // SKU has characters CODE128 can't encode — leave the barcode blank
         // rather than crash the whole sheet.
       }
     }
-  }, [item.id, item.sku])
+  }, [item.id, item.sku, qrSize, barH])
 
   return (
-    <div className="label-cell" style={{ width: `${template.labelW}in`, height: `${template.labelH}in` }}>
+    <div className="label-cell" style={{ width: `${template.labelW}in`, height: `${template.labelH}in`, padding: `${pad}in` }}>
       <div className="label-cell-inner">
         <div className="label-top">
-          <canvas ref={qrRef} className="label-qr" />
+          <canvas ref={qrRef} className="label-qr" style={{ width: `${qrSize}in`, height: `${qrSize}in` }} />
           <div className="label-text">
             <div className="label-name">{item.name}</div>
             <div className="label-sku">SKU: {item.sku}</div>
             <div className="label-price">{fmt$(item.price)}</div>
           </div>
         </div>
-        <canvas ref={barRef} className="label-barcode" />
+        <canvas ref={barRef} className="label-barcode" style={{ width: '100%', height: `${barH}in` }} />
       </div>
     </div>
   )
@@ -71,16 +74,16 @@ function LabelPage({ items, template }) {
 function PrintStyles() {
   return (
     <style>{`
-      .label-cell { box-sizing: border-box; padding: 0.08in; overflow: hidden; border: 1px dashed #cbd5e1; page-break-inside: avoid; }
-      .label-cell-inner { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
+      .label-cell { box-sizing: border-box; overflow: hidden; border: 1px dashed #cbd5e1; page-break-inside: avoid; }
+      .label-cell-inner { display: flex; flex-direction: column; height: 100%; justify-content: space-between; min-height: 0; }
       .label-top { display: flex; gap: 0.08in; align-items: flex-start; flex: 1; min-height: 0; }
-      .label-qr { width: 0.9in; height: 0.9in; flex-shrink: 0; }
+      .label-qr { display: block; flex-shrink: 0; object-fit: contain; }
       .label-text { min-width: 0; overflow: hidden; }
-      .label-name { font-weight: 700; font-size: 11px; line-height: 1.25; color: #0c4a6e;
+      .label-name { font-weight: 800; font-size: 13px; line-height: 1.25; color: #0c4a6e;
         display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
       .label-sku { font-size: 10px; color: #64748b; margin-top: 3px; font-family: monospace; }
       .label-price { font-size: 12px; font-weight: 700; color: #0c4a6e; margin-top: 3px; }
-      .label-barcode { width: 100%; height: 0.4in; }
+      .label-barcode { display: block; flex-shrink: 0; object-fit: contain; }
       .label-page + .label-page { page-break-before: always; margin-top: 16px; }
 
       @media print {
@@ -98,6 +101,7 @@ function PrintStyles() {
 // ── Build a downloadable PDF matching the same template/geometry ───
 async function buildPdf(items, templateKey) {
   const t = AVERY_TEMPLATES[templateKey]
+  const { pad, qrSize, barH } = computeLabelLayout(t)
   const doc = new jsPDF({ unit: 'in', format: 'letter' })
   const perPage = t.cols * t.rows
 
@@ -112,32 +116,29 @@ async function buildPdf(items, templateKey) {
 
     // Render off-screen (detached canvases) purely to get data URLs for jsPDF
     const qrCanvas = document.createElement('canvas')
-    await QRCode.toCanvas(qrCanvas, item.sku, { width: 240, margin: 0 })
+    await QRCode.toCanvas(qrCanvas, item.sku, { width: Math.round(qrSize * 200), margin: 0 })
 
     let hasBarcode = true
     const barCanvas = document.createElement('canvas')
     try {
-      JsBarcode(barCanvas, item.sku, { format: 'CODE128', displayValue: false, height: 60, margin: 0 })
+      JsBarcode(barCanvas, item.sku, { format: 'CODE128', displayValue: false, height: Math.round(barH * 150), margin: 0 })
     } catch (e) { hasBarcode = false }
 
-    const pad = 0.08
-    const qrSize = Math.min(t.labelH - pad * 2 - 0.45, 0.9)
     doc.addImage(qrCanvas.toDataURL('image/png'), 'PNG', x + pad, y + pad, qrSize, qrSize)
 
     const textX = x + pad + qrSize + pad
     const textW = t.labelW - (textX - x) - pad
     doc.setFont(undefined, 'bold')
-    doc.setFontSize(10)
-    doc.text(doc.splitTextToSize(item.name, textW), textX, y + pad + 0.13)
+    doc.setFontSize(12)
+    doc.text(doc.splitTextToSize(item.name, textW), textX, y + pad + 0.14)
     doc.setFont(undefined, 'normal')
     doc.setFontSize(8)
-    doc.text(`SKU: ${item.sku}`, textX, y + pad + 0.4)
+    doc.text(`SKU: ${item.sku}`, textX, y + pad + 0.46)
     doc.setFont(undefined, 'bold')
     doc.setFontSize(9)
-    doc.text(fmt$(item.price), textX, y + pad + 0.56)
+    doc.text(fmt$(item.price), textX, y + pad + 0.62)
 
     if (hasBarcode) {
-      const barH = Math.min(0.4, t.labelH * 0.22)
       doc.addImage(barCanvas.toDataURL('image/png'), 'PNG', x + pad, y + t.labelH - barH - pad, t.labelW - pad * 2, barH)
     }
   }
