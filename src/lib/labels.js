@@ -34,8 +34,8 @@ export function computeLabelLayout(template) {
   const pad = 0.08
   const barH = Math.min(0.4, template.labelH * 0.22)
   const qrSize = Math.max(
-    Math.min(template.labelH - pad * 2 - barH - pad, template.labelW * 0.4, 0.9),
-    0.35
+    Math.min(template.labelH - pad * 2 - barH - pad * 2, template.labelW * 0.26, 0.55),
+    0.3
   )
   return { pad, qrSize, barH }
 }

@@ -75,7 +75,7 @@ function PrintStyles() {
   return (
     <style>{`
       .label-cell { box-sizing: border-box; overflow: hidden; border: 1px dashed #cbd5e1; page-break-inside: avoid; }
-      .label-cell-inner { display: flex; flex-direction: column; height: 100%; justify-content: space-between; min-height: 0; }
+      .label-cell-inner { display: flex; flex-direction: column; height: 100%; justify-content: space-between; min-height: 0; gap: 0.05in; }
       .label-top { display: flex; gap: 0.08in; align-items: flex-start; flex: 1; min-height: 0; }
       .label-qr { display: block; flex-shrink: 0; object-fit: contain; }
       .label-text { min-width: 0; overflow: hidden; }
