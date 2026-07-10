@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { useData, totalOnHand } from '../hooks/useData'
 import { Icons, Modal, fmt$, fmtDate } from '../components/UI'
 import ScanButton from '../components/ScanButton'
+import LabelPrintModal from '../components/LabelPrinter'
 
 // Group inventory rows by their TOP-LEVEL location, bucketing any
 // sublocation rows underneath their parent. Rows sitting directly at a
@@ -100,7 +101,7 @@ function LocationsTab({ item, rows, locations }) {
   )
 }
 
-function DetailModal({ item, data, onClose }) {
+function DetailModal({ item, data, onClose, onPrintLabel }) {
   const [tab, setTab] = useState('locations')
   const { inventory, transactions, pos, locations, vendors } = data
   const rows = inventory.filter(r => r.item_id === item.id)
@@ -113,8 +114,14 @@ function DetailModal({ item, data, onClose }) {
   const PO_CLS = { draft: 'badge-slate', open: 'badge-blue', partial: 'badge-amber', received: 'badge-green', cancelled: 'badge-red' }
 
   return (
-    <Modal title={item.name} onClose={onClose} size="modal-xl"
-      footer={<button className="btn btn-secondary" onClick={onClose}>Close</button>}>
+    <Modal title={item.name} onClose={onClose}
+      size="modal-xl"
+      footer={
+        <>
+          <button className="btn btn-secondary" onClick={() => onPrintLabel(item)}>{Icons.barcode} Print Label</button>
+          <button className="btn btn-secondary" onClick={onClose}>Close</button>
+        </>
+      }>
 
       {/* Summary row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 18 }}>
@@ -255,6 +262,7 @@ export default function OnHand() {
   const { items, inventory } = data
   const [search, setSearch] = useState('')
   const [detail, setDetail] = useState(null)
+  const [printItem, setPrintItem] = useState(null)
   const [scanMsg, setScanMsg] = useState(null)
 
   const filtered = useMemo(() =>
@@ -331,7 +339,12 @@ export default function OnHand() {
                       </div>
                       <div style={{ fontSize: 10, color: 'var(--sl-400)', marginTop: 2 }}>{total}/{item.max_qty}</div>
                     </td>
-                    <td><button className="btn btn-ghost btn-sm" onClick={() => setDetail(item)}>{Icons.eye}View</button></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 3 }}>
+                        <button className="btn btn-ghost btn-icon btn-sm" title="Print label" onClick={() => setPrintItem(item)}>{Icons.barcode}</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setDetail(item)}>{Icons.eye}View</button>
+                      </div>
+                    </td>
                   </tr>
                 )
               })}
@@ -343,7 +356,8 @@ export default function OnHand() {
         </div>
       </div>
 
-      {detail && <DetailModal item={detail} data={data} onClose={() => setDetail(null)} />}
+      {detail && <DetailModal item={detail} data={data} onClose={() => setDetail(null)} onPrintLabel={setPrintItem} />}
+      {printItem && <LabelPrintModal item={printItem} onClose={() => setPrintItem(null)} />}
     </div>
   )
 }

@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import MasterList from './pages/MasterList'
 import OnHand from './pages/OnHand'
 import Locations from './pages/Locations'
+import Labels from './pages/Labels'
 import Vendors from './pages/Vendors'
 import PurchaseOrders from './pages/PurchaseOrders'
 import Receiving from './pages/Receiving'
@@ -24,6 +25,7 @@ const NAV = [
   { id: 'master',      label: 'Master List',       group: 'Inventory' },
   { id: 'onhand',      label: 'Inventory On Hand', group: 'Inventory' },
   { id: 'locations',   label: 'Locations',         group: 'Inventory' },
+  { id: 'labels',      label: 'Labels',            group: 'Inventory' },
   { id: 'vendors',     label: 'Vendors',           group: 'Procurement' },
   { id: 'pos',         label: 'Purchase Orders',   group: 'Procurement' },
   { id: 'receiving',   label: 'Receiving',         group: 'Procurement' },
@@ -167,6 +169,7 @@ function Shell() {
             {page === 'master'      && <MasterList />}
             {page === 'onhand'      && <OnHand />}
             {page === 'locations'   && <Locations user={user} />}
+            {page === 'labels'      && <Labels />}
             {page === 'vendors'     && <Vendors user={user} />}
             {page === 'pos'         && <PurchaseOrders user={user} />}
             {page === 'receiving'   && <Receiving />}
